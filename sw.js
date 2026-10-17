@@ -1,5 +1,5 @@
 // Haelt die App-Huelle offline verfuegbar; Statusdaten kommen immer live von ntfy.sh
-const CACHE = 'robomber-v2';
+const CACHE = 'robomber-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
