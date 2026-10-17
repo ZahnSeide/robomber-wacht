@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robomber Wacht</title>
+<meta name="description" content="Status des Robomber-Servers für RuneScape: Dragonwilds">
+<meta name="theme-color" content="#0b0907">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Robomber">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0907;
+  --panel: rgba(26, 20, 15, .72);
+  --line: rgba(212, 175, 55, .28);
+  --gold: #d4af37;
+  --gold-hi: #f3d77a;
+  --text: #ece2cc;
+  --muted: #a99a7e;
+  --on: #5dff9a;
+  --on-deep: #1f8f50;
+  --off: #ff5a4f;
+  --off-deep: #8a1f18;
+  --upd: #ffb547;
+  --state: var(--muted);
+  --state-deep: #3a3328;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: radial-gradient(ellipse at 50% -10%, #2a1d10 0%, var(--bg) 55%) fixed, var(--bg);
+  color: var(--text);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+body[data-state="online"]  { --state: var(--on);  --state-deep: var(--on-deep); }
+body[data-state="offline"] { --state: var(--off); --state-deep: var(--off-deep); }
+body[data-state="update"]  { --state: var(--upd); --state-deep: #8a5a12; }
+body[data-state="stale"]   { --state: var(--upd); --state-deep: #5c4a2a; }
+
+#embers { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%); }
+
+main {
+  position: relative; z-index: 2;
+  max-width: 560px; margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 22px;
+}
+
+header { text-align: center; }
+.kicker { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: .42em; color: var(--muted); text-transform: uppercase; }
+h1 {
+  font-family: 'Cinzel', serif; font-weight: 900; font-size: clamp(38px, 11vw, 58px); letter-spacing: .06em; line-height: 1.05; margin-top: 6px;
+  background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 45%, #8c6a1c 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 14px rgba(212,175,55,.25));
+}
+.flourish { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 8px; color: var(--gold); opacity: .8; }
+.flourish i { display: block; height: 1px; width: 70px; background: linear-gradient(90deg, transparent, var(--gold)); }
+.flourish i:last-child { transform: scaleX(-1); }
+
+/* Siegel */
+.seal { position: relative; width: min(78vw, 300px); aspect-ratio: 1; display: grid; place-items: center; margin-top: 4px; }
+.seal svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ring-outer { animation: spin 60s linear infinite; transform-origin: 50% 50%; }
+.ring-inner { animation: spin 38s linear infinite reverse; transform-origin: 50% 50%; }
+body[data-state="offline"] .ring-outer, body[data-state="offline"] .ring-inner { animation-duration: 240s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.core {
+  position: relative; width: 46%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, var(--state) 0%, var(--state-deep) 55%, #050403 100%);
+  box-shadow: 0 0 40px 6px color-mix(in srgb, var(--state) 45%, transparent), inset 0 0 30px rgba(0,0,0,.6);
+  display: grid; place-items: center;
+  transition: background .8s, box-shadow .8s;
+}
+body[data-state="online"] .core { animation: pulse 2.6s ease-in-out infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 34px 4px color-mix(in srgb, var(--state) 40%, transparent), inset 0 0 30px rgba(0,0,0,.6); }
+  50%     { box-shadow: 0 0 70px 18px color-mix(in srgb, var(--state) 55%, transparent), inset 0 0 30px rgba(0,0,0,.5); }
+}
+.core svg { position: static; width: 64%; height: 64%; }
+.core .eye { fill: var(--state); filter: drop-shadow(0 0 2px var(--state)); }
+
+.state-label { text-align: center; }
+.state-word {
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: clamp(26px, 7.5vw, 34px); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--state); text-shadow: 0 0 18px color-mix(in srgb, var(--state) 55%, transparent); transition: color .6s;
+}
+.state-line { font-style: italic; color: var(--muted); font-size: 19px; margin-top: 4px; min-height: 1.4em; }
+
+/* Karten */
+.card {
+  width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  padding: 16px 18px; position: relative; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.card::before, .card::after { content: '◆'; position: absolute; top: -9px; font-size: 12px; color: var(--gold); background: var(--bg); padding: 0 6px; }
+.card::before { left: 14px; } .card::after { right: 14px; }
+.card h2 { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: .32em; color: var(--gold); text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.stat b { display: block; font-family: 'Cinzel', serif; font-size: 22px; color: var(--text); font-weight: 700; }
+.stat span { font-size: 14px; color: var(--muted); }
+
+.heroes { display: flex; flex-wrap: wrap; gap: 8px; }
+.hero {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border: 1px solid var(--line); border-radius: 99px;
+  background: rgba(212,175,55,.06); font-weight: 600; animation: rise .5s ease-out both;
+}
+.hero .sigil { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-family: 'Cinzel', serif; font-size: 13px; font-weight: 900; color: #120d08;
+  background: linear-gradient(160deg, var(--gold-hi), var(--gold)); }
+.empty { color: var(--muted); font-style: italic; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.chronicle { list-style: none; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+.chronicle li { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: baseline; animation: rise .4s ease-out both; }
+.chronicle .ic { text-align: center; }
+.chronicle .when { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.chronicle::-webkit-scrollbar { width: 4px; } .chronicle::-webkit-scrollbar-thumb { background: var(--line); }
+
+.howto { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+.howto dt { color: var(--muted); }
+.howto dd { font-weight: 600; }
+.howto code { font-family: 'Cinzel', serif; letter-spacing: .05em; color: var(--gold-hi); }
+
+.install {
+  display: none; font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: .14em; font-size: 13px; text-transform: uppercase;
+  color: #120d08; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 3px; padding: 12px 20px; cursor: pointer;
+}
+footer { font-size: 13px; color: var(--muted); text-align: center; opacity: .7; }
+footer .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+footer .dot.live { background: var(--on); box-shadow: 0 0 8px var(--on); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+</style>
+</head>
+<body data-state="loading">
+<canvas id="embers"></canvas>
+<div class="vignette"></div>
+<main>
+  <header>
+    <div class="kicker">RuneScape · Dragonwilds</div>
+    <h1>Robomber</h1>
+    <div class="flourish"><i></i>✦<i></i></div>
+  </header>
+
+  <div class="seal" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <defs>
+        <path id="runepath" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/>
+      </defs>
+      <g class="ring-outer">
+        <circle cx="100" cy="100" r="96" fill="none" stroke="#d4af37" stroke-opacity=".55" stroke-width="1"/>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#d4af37" stroke-opacity=".25" stroke-width="6" stroke-dasharray="2 7"/>
+        <text font-family="Cinzel, serif" font-size="9.5" letter-spacing="5" fill="#d4af37" fill-opacity=".7">
+          <textPath href="#runepath">ᚱᛟᛒᛟᛗᛒᛖᚱ ✦ DRAGONWILDS ✦ ᚹᚨᛚᛞ ✦ ᚱᛟᛒᛟᛗᛒᛖᚱ ✦ DRAGONWILDS ✦ ᚹᚨᛚᛞ ✦</textPath>
+        </text>
+      </g>
+      <g class="ring-inner">
+        <circle cx="100" cy="100" r="74" fill="none" stroke="var(--state)" stroke-opacity=".5" stroke-width="1.2"/>
+        <polygon points="100,30 160,135 40,135" fill="none" stroke="#d4af37" stroke-opacity=".35" stroke-width="1"/>
+        <polygon points="100,170 40,65 160,65" fill="none" stroke="#d4af37" stroke-opacity=".35" stroke-width="1"/>
+      </g>
+    </svg>
+    <div class="core">
+      <svg viewBox="0 0 64 64">
+        <path d="M5 31 Q9 27.5 13 27 L15.5 25.2 L18 26.4 Q24 23.5 30 21 Q33.5 17.5 37 16 Q47 9 59 3.5 Q51 11.5 46 18.5 Q51.5 15.5 56 14.5 Q51.5 19.5 48 25 Q50 27 51.5 29.5 L58 28 L54 33.5 L61 34.5 L55.5 39.5 L61.5 42.5 L55.5 46 Q57 53 60 61 L39 61 Q38.5 52 35.5 47 Q31 44 26 43.5 Q18 43.5 10.5 40.5 L9 37.2 L12.2 37.6 L13.5 35.6 L15.8 37.4 L17.6 35.6 L19.6 37 Q23 36.5 27 35.5 Q21 34 16.5 34.2 L15.2 32.2 L13 34 L11.4 32.3 L9.4 33.8 Q6.5 33.5 5 31 Z" fill="#0b0907" fill-opacity=".78"/>
+        <path class="eye" d="M24.5 26.8 Q27.5 24.6 31 25.3 Q28 27.9 24.5 26.8 Z"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="state-label">
+    <div class="state-word" id="stateWord">Rufe die Wacht…</div>
+    <div class="state-line" id="stateLine">&nbsp;</div>
+  </div>
+
+  <button class="install" id="installBtn">Als App installieren</button>
+
+  <section class="card">
+    <h2>Das Reich</h2>
+    <div class="stats">
+      <div class="stat"><b id="statPlayers">–</b><span>Helden</span></div>
+      <div class="stat"><b id="statUptime">–</b><span>Wach seit</span></div>
+      <div class="stat"><b id="statLast">–</b><span>Letztes Zeichen</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>In der Welt</h2>
+    <div class="heroes" id="heroes"><span class="empty">Niemand wandelt durch Robomber.</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Chronik</h2>
+    <ul class="chronicle" id="chronicle"><li><span class="ic">✦</span><span class="empty">Noch keine Einträge.</span><span></span></li></ul>
+  </section>
+
+  <section class="card">
+    <h2>Beitreten</h2>
+    <dl class="howto">
+      <dt>Welt</dt><dd>Welten → Öffentlich → <code>Robomber</code></dd>
+      <dt>PC (Radmin)</dt><dd>Direct → <code>26.233.69.138:7777</code></dd>
+      <dt>Passwort</dt><dd>Frag Jan</dd>
+    </dl>
+  </section>
+
+  <footer><span class="dot" id="liveDot"></span><span id="liveText">verbinde…</span></footer>
+</main>
+
+<script>
+// --- Konfiguration ---
+const TOPIC = 'robomber-8u1umtrr7k1v1i';     // Ereignisse (online, offline, update, join, leave)
+const TOPIC_HB = TOPIC + '-hb';               // Lebenszeichen alle 2 Minuten (mit Spielerliste)
+const NTFY = 'https://ntfy.sh';
+const STALE_MS = 6 * 60 * 1000;               // ohne Lebenszeichen gilt der Server als verstummt
+
+const $ = id => document.getElementById(id);
+const state = { events: [], lastBeat: null, players: [], seen: new Set() };
+
+function tagOf(m) {
+  const tags = m.tags || [];
+  for (const t of ['online', 'offline', 'update', 'join', 'leave']) if (tags.includes(t)) return t;
+  return null;
+}
+
+function ingest(m) {
+  if (m.event !== 'message' || state.seen.has(m.id)) return;
+  state.seen.add(m.id);
+  const time = m.time * 1000;
+  if (m.topic === TOPIC_HB) {
+    if (!state.lastBeat || time >= state.lastBeat) {
+      state.lastBeat = time;
+      try { state.players = JSON.parse(m.message).players || []; } catch { }
+    }
+    return;
+  }
+  const type = tagOf(m);
+  if (!type) return;
+  state.events.push({ type, time, text: m.message });
+  state.events.sort((a, b) => a.time - b.time);
+  if (type === 'online' || type === 'offline' || type === 'update') state.players = [];
+  if (type === 'join') { const n = (m.message.match(/^(.+?) ist /) || [])[1]; if (n && !state.players.includes(n)) state.players.push(n); }
+  if (type === 'leave') { const n = (m.message.match(/^(.+?) hat /) || [])[1]; state.players = state.players.filter(p => p !== n); }
+}
+
+function relTime(ms) {
+  const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (s < 60) return 'gerade eben';
+  const m = Math.round(s / 60); if (m < 60) return `vor ${m} Min.`;
+  const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`;
+  return `vor ${Math.floor(h / 24)} T.`;
+}
+function duration(ms) {
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 60) return `${m} Min.`;
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}`;
+}
+
+const LINES = {
+  online:  ['Die Tore von Robomber stehen offen.', 'Das Feuer brennt. Die Welt ruft.', 'Der Drache schläft nicht – komm herein.'],
+  offline: ['Die Tore sind verschlossen.', 'Robomber ruht im Nebel.', 'Das Feuer ist erloschen. Für jetzt.'],
+  update:  ['Die Schmiede glüht – ein Update wird geschmiedet.'],
+  stale:   ['Die Wacht schweigt. Ist Jans PC eingeschlafen?'],
+};
+const pick = arr => arr[Math.floor(Date.now() / 3.6e6) % arr.length];
+
+function render() {
+  const lastStatus = [...state.events].reverse().find(e => ['online', 'offline', 'update'].includes(e.type));
+  let s = 'offline';
+  if (lastStatus) {
+    s = lastStatus.type;
+    if (s === 'online') {
+      const alive = Math.max(lastStatus.time, state.lastBeat || 0);
+      if (Date.now() - alive > STALE_MS) s = 'stale';
+    }
+  }
+  document.body.dataset.state = s;
+  $('stateWord').textContent = { online: 'Online', offline: 'Offline', update: 'Update', stale: 'Verstummt' }[s];
+  $('stateLine').textContent = pick(LINES[s]);
+
+  const online = s === 'online';
+  $('statPlayers').textContent = online ? state.players.length : '–';
+  $('statUptime').textContent = online && lastStatus ? duration(lastStatus.time) : '–';
+  const lastSign = Math.max(state.lastBeat || 0, state.events.length ? state.events[state.events.length - 1].time : 0);
+  $('statLast').textContent = lastSign ? relTime(lastSign).replace('vor ', '').replace('gerade eben', 'jetzt') : '–';
+
+  const heroes = $('heroes');
+  heroes.replaceChildren();
+  if (online && state.players.length) {
+    for (const p of state.players) {
+      const el = document.createElement('span'); el.className = 'hero';
+      const sg = document.createElement('span'); sg.className = 'sigil'; sg.textContent = p.charAt(0).toUpperCase();
+      el.append(sg, document.createTextNode(p)); heroes.append(el);
+    }
+  } else {
+    const e = document.createElement('span'); e.className = 'empty';
+    e.textContent = online ? 'Die Welt wartet auf ihre Helden.' : 'Niemand wandelt durch Robomber.';
+    heroes.append(e);
+  }
+
+  const icons = { online: '🔥', offline: '🌙', update: '⚒️', join: '⚔️', leave: '🚪' };
+  const list = $('chronicle'); list.replaceChildren();
+  const recent = state.events.slice(-25).reverse();
+  if (!recent.length) {
+    const li = document.createElement('li'); li.innerHTML = '<span class="ic">✦</span><span class="empty">Noch keine Einträge.</span><span></span>'; list.append(li);
+  }
+  for (const e of recent) {
+    const li = document.createElement('li');
+    const ic = document.createElement('span'); ic.className = 'ic'; ic.textContent = icons[e.type] || '✦';
+    const tx = document.createElement('span'); tx.textContent = e.text;
+    const wh = document.createElement('span'); wh.className = 'when'; wh.textContent = relTime(e.time);
+    li.append(ic, tx, wh); list.append(li);
+  }
+}
+
+async function loadHistory() {
+  const res = await fetch(`${NTFY}/${TOPIC},${TOPIC_HB}/json?poll=1&since=48h`);
+  const text = await res.text();
+  text.split('\n').filter(Boolean).forEach(l => { try { ingest(JSON.parse(l)); } catch { } });
+  render();
+}
+
+function connectLive() {
+  const es = new EventSource(`${NTFY}/${TOPIC},${TOPIC_HB}/sse`);
+  es.onopen = () => { $('liveDot').classList.add('live'); $('liveText').textContent = 'live mit der Wacht verbunden'; };
+  es.onmessage = ev => { try { ingest(JSON.parse(ev.data)); render(); } catch { } };
+  es.onerror = () => { $('liveDot').classList.remove('live'); $('liveText').textContent = 'Verbindung unterbrochen – versuche erneut…'; };
+}
+
+loadHistory().catch(() => { $('stateWord').textContent = 'Keine Verbindung'; }).finally(connectLive);
+setInterval(render, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) loadHistory().catch(() => {}); });
+
+// --- Glut-Partikel ---
+(() => {
+  const c = $('embers'), x = c.getContext('2d');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let w, h, parts = [];
+  const resize = () => { w = c.width = innerWidth * devicePixelRatio; h = c.height = innerHeight * devicePixelRatio; };
+  resize(); addEventListener('resize', resize);
+  const spawn = () => ({ x: Math.random() * w, y: h + 10, r: (Math.random() * 1.8 + .6) * devicePixelRatio, vy: -(Math.random() * .6 + .25) * devicePixelRatio, vx: (Math.random() - .5) * .3, life: 0, max: 400 + Math.random() * 500 });
+  for (let i = 0; i < 40; i++) { const p = spawn(); p.y = Math.random() * h; parts.push(p); }
+  (function tick() {
+    x.clearRect(0, 0, w, h);
+    const col = getComputedStyle(document.body).getPropertyValue('--state').trim() || '#d4af37';
+    for (const p of parts) {
+      p.life++; p.y += p.vy; p.x += p.vx + Math.sin(p.life / 40) * .25;
+      const a = Math.sin(Math.PI * Math.min(1, p.life / p.max)) * .8;
+      x.globalAlpha = a; x.fillStyle = p.life % 3 ? '#e8b04a' : col;
+      x.beginPath(); x.arc(p.x, p.y, p.r, 0, 6.283); x.fill();
+      if (p.life > p.max || p.y < -10) Object.assign(p, spawn());
+    }
+    requestAnimationFrame(tick);
+  })();
+})();
+
+// --- Installierbar machen ---
+let deferred;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('installBtn').style.display = 'inline-block'; });
+$('installBtn').addEventListener('click', async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $('installBtn').style.display = 'none'; });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

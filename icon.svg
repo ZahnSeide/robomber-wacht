@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0" stop-color="#2a1d10"/>
+      <stop offset="1" stop-color="#0b0907"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#5dff9a"/>
+      <stop offset=".6" stop-color="#1f8f50"/>
+      <stop offset="1" stop-color="#06140c"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3d77a"/>
+      <stop offset="1" stop-color="#a67c22"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="200" fill="none" stroke="url(#gold)" stroke-width="10"/>
+  <circle cx="256" cy="256" r="178" fill="none" stroke="#d4af37" stroke-opacity=".45" stroke-width="14" stroke-dasharray="4 18"/>
+  <polygon points="256,96 394,336 118,336" fill="none" stroke="#d4af37" stroke-opacity=".5" stroke-width="5"/>
+  <polygon points="256,416 118,176 394,176" fill="none" stroke="#d4af37" stroke-opacity=".5" stroke-width="5"/>
+  <circle cx="256" cy="256" r="92" fill="url(#core)"/>
+  <g transform="translate(172.8 172.8) scale(2.6)">
+    <path d="M5 31 Q9 27.5 13 27 L15.5 25.2 L18 26.4 Q24 23.5 30 21 Q33.5 17.5 37 16 Q47 9 59 3.5 Q51 11.5 46 18.5 Q51.5 15.5 56 14.5 Q51.5 19.5 48 25 Q50 27 51.5 29.5 L58 28 L54 33.5 L61 34.5 L55.5 39.5 L61.5 42.5 L55.5 46 Q57 53 60 61 L39 61 Q38.5 52 35.5 47 Q31 44 26 43.5 Q18 43.5 10.5 40.5 L9 37.2 L12.2 37.6 L13.5 35.6 L15.8 37.4 L17.6 35.6 L19.6 37 Q23 36.5 27 35.5 Q21 34 16.5 34.2 L15.2 32.2 L13 34 L11.4 32.3 L9.4 33.8 Q6.5 33.5 5 31 Z" fill="#0b0907" fill-opacity=".78"/>
+    <path d="M24.5 26.8 Q27.5 24.6 31 25.3 Q28 27.9 24.5 26.8 Z" fill="#5dff9a"/>
+  </g>
+</svg>
